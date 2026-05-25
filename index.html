@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aigentless | Automated Leasing Platform</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            fancy: ['"Libre Baskerville"', 'serif'],
+          },
+          colors: {
+            brand: {
+              gray: '#666666',
+              light: '#f5f5f5'
+            }
+          }
+        },
+      },
+    };
+  </script>
+  
+  <style>
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 5.5rem;
+    }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    section[id] {
+      scroll-margin-top: 5.5rem;
+    }
+
+    /* Liquid Glass CSS */
+    .liquid-glass {
+      background: rgba(0, 0, 0, 0.5);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.35) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Character Animation Base */
+    .char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateX(-18px);
+      transition: opacity 500ms ease-out, transform 500ms ease-out;
+    }
+    
+    .char.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .glass-border {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+    /* Nav-matched CTA buttons */
+    .nav-cta {
+      font-size: 11px;
+      font-weight: 600; /* This is the CSS equivalent of font-semibold */
+      letter-spacing: -0.04em; /* This is the CSS equivalent of tracking-tighter */
+      text-transform: uppercase;
+      color: rgba(229, 231, 235, 0.95);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .nav-cta:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Unified translucent sections — continuous scroll */
+    .scroll-section {
+      position: relative;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Subtle hero → content feather */
+    .hero-to-content-blur {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: min(18vh, 140px);
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.06) 50%,
+        rgba(0, 0, 0, 0.14) 100%
+      );
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 75%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 75%);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* Integration conveyor belt */
+    @keyframes conveyor-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .integration-conveyor {
+      overflow: hidden;
+      width: 100%;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+    }
+
+    .integration-conveyor-track {
+      display: flex;
+      gap: 1rem;
+      width: max-content;
+      animation: conveyor-scroll 45s linear infinite;
+      will-change: transform;
+    }
+
+    .integration-conveyor:hover .integration-conveyor-track {
+      animation-play-state: paused;
+    }
+
+    .integration-card {
+      flex-shrink: 0;
+      width: 11rem;
+    }
+
+    @media (min-width: 768px) {
+      .integration-card { width: 12.5rem; }
+    }
+
+/* Hero rotating phrase — locked to one line and scaled to fit */
+.rotating-phrase-window {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      padding-bottom: 0.15em;
+      position: relative;
+    }
+
+    .phrase-layer {
+      display: block;
+      width: 100%;
+      line-height: 1.2;
+      white-space: nowrap;
+      font-size: min(2.5vw, 4.5rem); /* Shrunk down so long phrases fit the screen */
+      color: #fff;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+    }
+
+    .phrase-layer.is-exiting {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+
+    .phrase-layer.is-entering {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+
+    .phrase-layer.is-active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .cross-sell-line {
+      stroke: rgba(255, 255, 255, 0.2);
+      stroke-width: 1;
+      fill: none;
+      transition: stroke-opacity 300ms ease, stroke 300ms ease;
+    }
+
+    .cross-sell-graphic:hover .cross-sell-line {
+      stroke: rgba(255, 255, 255, 0.55);
+      stroke-opacity: 1;
+    }
+
+    .feature-panel-fade {
+      transition: opacity 300ms ease-out;
+    }
+
+    .iphone-shell {
+      border-radius: 2.75rem;
+      padding: 0.55rem;
+      background: linear-gradient(145deg, #2a2a2a 0%, #0a0a0a 100%);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    .iphone-screen {
+      border-radius: 2.25rem;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .iphone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96px;
+      height: 26px;
+      background: #000;
+      border-radius: 0 0 1rem 1rem;
+      z-index: 20;
+    }
+
+    .chat-bubble-enter {
+      opacity: 0;
+      transform: scale(0.95) translateY(8px);
+      transition: opacity 450ms cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chat-bubble-enter.is-visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    @keyframes typing-dot {
+      0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    .typing-dot {
+      animation: typing-dot 1s ease-in-out infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const ChatBubble = ({ role, children }) => {
+      const [visible, setVisible] = useState(false);
+      useEffect(() => {
+        const frame = requestAnimationFrame(() => setVisible(true));
+        return () => cancelAnimationFrame(frame);
+      }, []);
+
+      const isUser = role === 'user';
+      return (
+        <div
+          className={`chat-bubble-enter ${visible ? 'is-visible' : ''} ${
+            isUser
+              ? 'bg-white text-black p-4 rounded-2xl rounded-tr-none ml-auto max-w-[85%] shadow-md'
+              : 'bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5 max-w-[85%]'
+          }`}
+        >
+          <p className={`text-xs leading-relaxed ${isUser ? 'font-medium' : 'text-gray-300'}`}>
+            {children}
+          </p>
+        </div>
+      );
+    };
+
+    const TypingIndicator = () => (
+      <div className="chat-bubble-enter is-visible flex gap-1.5 items-center bg-white/5 border border-white/5 px-4 py-3.5 rounded-2xl rounded-tr-none ml-auto max-w-[85%] w-fit">
+        <span className="typing-dot w-1.5 h-1.5 rounded-full bg-gray-400 block" />
+        <span className="typing-dot w-1.5 h-1.5 rounded-full bg-gray-400 block" />
+        <span className="typing-dot w-1.5 h-1.5 rounded-full bg-gray-400 block" />
+      </div>
+    );
+
+    const ControlCenterChatSimulator = () => {
+      const panelRef = useRef(null);
+      const chatRef = useRef(null);
+      const startedRef = useRef(false);
+      const [hasStarted, setHasStarted] = useState(false);
+      const [showAi1, setShowAi1] = useState(false);
+      const [showTyping, setShowTyping] = useState(false);
+      const [showUser, setShowUser] = useState(false);
+      const [showAi2, setShowAi2] = useState(false);
+
+      useEffect(() => {
+        const node = panelRef.current;
+        if (!node) return;
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting && !startedRef.current) {
+              startedRef.current = true;
+              setHasStarted(true);
+            }
+          },
+          { threshold: 0.35, rootMargin: '0px 0px -8% 0px' }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+      }, []);
+
+      useEffect(() => {
+        if (!hasStarted) return;
+        const t1 = setTimeout(() => setShowAi1(true), 800);
+        const t2 = setTimeout(() => setShowTyping(true), 2400);
+        const t3 = setTimeout(() => {
+          setShowTyping(false);
+          setShowUser(true);
+        }, 2800);
+        const t4 = setTimeout(() => setShowAi2(true), 4800);
+        return () => [t1, t2, t3, t4].forEach(clearTimeout);
+      }, [hasStarted]);
+
+      useEffect(() => {
+        const el = chatRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      }, [showAi1, showTyping, showUser, showAi2]);
+
+      return (
+        <div ref={panelRef} className="mx-auto w-full max-w-[300px] lg:max-w-[320px]">
+          <div className="iphone-shell">
+            <div className="iphone-screen flex flex-col min-h-[520px] max-h-[560px]">
+              <div className="iphone-notch" aria-hidden="true" />
+              <div className="flex items-center justify-between px-5 pt-10 pb-2 shrink-0">
+                <span className="text-[10px] text-gray-400 font-medium">9:41</span>
+                <span className="text-[9px] text-gray-400 tracking-widest uppercase font-semibold">Leasa AI</span>
+                <span className="text-[10px] text-gray-500">●●●</span>
+              </div>
+
+              <div ref={chatRef} className="flex-1 space-y-3 overflow-y-auto px-3 pb-5 min-h-0 scroll-smooth">
+                {showAi1 && (
+                  <ChatBubble role="ai">
+                    <>
+                      Welcome to <strong className="text-white font-semibold">The Audley</strong>, Bella! Your self-guided exploration of Unit 102 is active. Let me know if you have questions about specific utilities or building dimensions.
+                    </>
+                  </ChatBubble>
+                )}
+                {showTyping && <TypingIndicator />}
+                {showUser && (
+                  <ChatBubble role="user">
+                    Are there any alternative layouts or matching units available within this building portfolio?
+                  </ChatBubble>
+                )}
+                {showAi2 && (
+                  <ChatBubble role="ai">
+                    Yes, Unit 112 is a 1,100 sq ft option featuring 2 bathrooms, available starting Dec 15. Would you like me to adjust your access schedule or unlock the application dashboard?
+                  </ChatBubble>
+                )}
+              </div>
+
+              <div className="shrink-0 h-1.5 mx-auto mb-2 w-28 rounded-full bg-white/20" aria-hidden="true" />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- Components ---
+
+    const FadeIn = ({ children, delay = 0, duration = 1000, className = "" }) => {
+      const [isVisible, setIsVisible] = useState(false);
+      useEffect(() => {
+        const timer = setTimeout(() => setIsVisible(true), delay);
+        return () => clearTimeout(timer);
+      }, [delay]);
+
+      return (
+        <div 
+          className={`transition-all ${className}`}
+          style={{ 
+            opacity: isVisible ? 1 : 0, 
+            transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+            transitionDuration: `${duration}ms`,
+            transitionTimingFunction: 'ease-out'
+          }}
+        >
+          {children}
+        </div>
+      );
+    };
+
+    const HERO_TYPE = "font-semibold uppercase tracking-tighter text-[5vw] md:text-5xl lg:text-6xl leading-[1.2] text-white";
+    const HERO_TRACKING = {}; 
+    const HERO_SUBTITLE = "text-sm md:text-base font-semibold uppercase tracking-tighter text-gray-300 mt-2";
+    const HERO_TAGLINE = "text-lg md:text-xl font-normal text-gray-200 leading-snug";
+
+    const ROTATING_PHRASES = [
+      "actually close.",
+      "automatically convert leads to leases.",
+      "meet renters right where they are.",
+    ];
+
+    const RotatingPhrases = () => {
+      const [index, setIndex] = useState(0);
+      const [phase, setPhase] = useState('active'); // entering | active | exiting
+      const indexRef = useRef(0);
+
+      useEffect(() => {
+        const cycle = () => {
+          setPhase('exiting');
+          setTimeout(() => {
+            const next = (indexRef.current + 1) % ROTATING_PHRASES.length;
+            indexRef.current = next;
+            setIndex(next);
+            setPhase('entering');
+            setTimeout(() => setPhase('active'), 40);
+          }, 500);
+        };
+        const timer = setInterval(cycle, 4000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const phaseClass =
+        phase === 'exiting' ? 'is-exiting' : phase === 'entering' ? 'is-entering' : 'is-active';
+
+      return (
+        <span className={`rotating-phrase-window ${HERO_TYPE}`} style={HERO_TRACKING}>
+          <span key={index} className={`phrase-layer ${phaseClass}`}>
+            {ROTATING_PHRASES[index]}
+          </span>
+        </span>
+      );
+    };
+
+    const CrossSellGraphic = () => {
+      const [step, setStep] = useState(0);
+
+      // Staggered animation for the options popping in
+      useEffect(() => {
+        let isMounted = true;
+        const s1 = setTimeout(() => isMounted && setStep(1), 500);  // Inter-Portfolio pops
+        const s2 = setTimeout(() => isMounted && setStep(2), 900);  // Up-Sell pops
+        
+        return () => {
+          isMounted = false;
+          clearTimeout(s1); clearTimeout(s2);
+        };
+      }, []);
+
+      return (
+        <div className="liquid-glass rounded-2xl p-5 md:p-6 min-h-[280px] flex flex-col items-center justify-center">
+          <div className="relative z-10 flex flex-col items-center h-full w-full">
+            
+            {/* Primary Selection (Static) */}
+            <div className="bg-white/10 rounded-xl px-4 py-3 text-center max-w-[280px] w-full shadow-lg border border-white/5">
+              <div className="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Primary Selection</div>
+              <div className="text-xs text-white font-medium leading-snug">Unit 104 — Paper Box Lofts</div>
+              <div className="text-[11px] text-gray-300 mt-0.5">$3,600/mo</div>
+            </div>
+            
+            <div className="flex-1 min-h-[32px]" />
+            
+            {/* Animated Cross-Sell Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[380px]">
+              
+              {/* Inter-Portfolio Card */}
+              <div 
+                className={`bg-white/[0.06] rounded-xl px-4 py-4 text-left cursor-pointer border border-transparent hover:border-white/20 hover:bg-white/[0.09] hover:scale-105 hover:shadow-xl transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${step >= 1 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
+              >
+                <div className="text-[8px] uppercase tracking-widest text-emerald-400/90 mb-1.5 font-semibold">Inter-Portfolio</div>
+                <div className="text-[11px] text-white font-medium leading-tight mb-1">Unit 112 — The Audley</div>
+                <div className="text-[10px] text-gray-400">$1,800/mo · Available Nov 15</div>
+              </div>
+              
+              {/* Up-Sell Card */}
+              <div 
+                className={`bg-white/[0.06] rounded-xl px-4 py-4 text-left cursor-pointer border border-transparent hover:border-white/20 hover:bg-white/[0.09] hover:scale-105 hover:shadow-xl transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${step >= 2 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
+              >
+                <div className="text-[8px] uppercase tracking-widest text-blue-400/90 mb-1.5 font-semibold">Up-Sell</div>
+                <div className="text-[11px] text-white font-medium leading-tight mb-1">Unit 206 — The Maple</div>
+                <div className="text-[10px] text-gray-400">Penthouse · Leasa Suggested</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    };
+    const DeploymentGraphic = () => {
+      const [step, setStep] = useState(0);
+
+      // Staggered animation: Wireframe -> Brand Name -> Properties fade in
+      useEffect(() => {
+        let isMounted = true;
+        const s1 = setTimeout(() => isMounted && setStep(1), 600);  // "Fox River" fades in
+        const s2 = setTimeout(() => isMounted && setStep(2), 1600); // "Your Brand Live" fades out
+        const s3 = setTimeout(() => isMounted && setStep(3), 2000); // Properties list fades in
+        
+        return () => {
+          isMounted = false;
+          clearTimeout(s1); clearTimeout(s2); clearTimeout(s3);
+        };
+      }, []);
+
+      const properties = [
+        { addr: '1401 S State St', rent: '$2,400' },
+        { addr: '850 N Lake Shore Dr', rent: '$3,100' },
+        { addr: '200 E Illinois St', rent: '$2,850' },
+      ];
+
+      return (
+        <div className="liquid-glass rounded-2xl p-5 h-full min-h-[240px] flex flex-col relative overflow-hidden">
+          
+          {/* Header Section */}
+          <div className="flex gap-3 items-center mb-4 relative z-20">
+            <div className="w-10 h-10 rounded-xl bg-white/15 shrink-0 flex items-center justify-center overflow-hidden border border-white/5">
+               <span className={`text-[10px] font-bold tracking-widest text-white transition-opacity duration-700 ${step >= 1 ? 'opacity-100' : 'opacity-0'}`}>
+                 FR
+               </span>
+            </div>
+            
+            <div className="flex-1 h-10 relative flex flex-col justify-center">
+              {/* Initial Skeleton Bars */}
+              <div className={`absolute inset-0 flex flex-col justify-center space-y-2 transition-all duration-500 ${step >= 1 ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}`}>
+                <div className="h-2.5 w-[80%] max-w-[140px] rounded bg-white/20" />
+                <div className="h-2 w-[60%] max-w-[100px] rounded bg-white/10" />
+              </div>
+              
+              {/* Branded Text */}
+              <div className={`absolute inset-0 flex flex-col justify-center transition-all duration-700 ${step >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+                <div className="text-[13px] text-white font-medium tracking-tight">Fox River Properties</div>
+                <div className="text-[9px] text-emerald-400 uppercase tracking-widest mt-0.5 font-semibold">Live Portfolio</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Cross-Fade Section */}
+          <div className="flex-1 relative mt-1">
+            
+            {/* The "Your Brand Live" placeholder */}
+            <div className={`absolute inset-0 rounded-xl bg-white/5 flex items-center justify-center transition-all duration-700 ${step >= 2 ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+              <span className="text-[10px] text-gray-400 uppercase tracking-[0.3em]">Your Brand · Live</span>
+            </div>
+
+            {/* The Branded Property List */}
+            <div className={`absolute inset-0 flex flex-col justify-center gap-2.5 transition-all duration-700 ${step >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+              {properties.map((prop, i) => (
+                <div 
+                  key={i} 
+                  className={`flex justify-between items-center bg-white/[0.04] rounded-lg px-3.5 py-2.5 border border-white/5 transition-all duration-500 hover:bg-white/[0.08] cursor-pointer`}
+                  style={{ transitionDelay: `${step >= 3 ? i * 150 : 0}ms` }}
+                >
+                  <span className="text-[11px] text-white font-medium">{prop.addr}</span>
+                  <span className="text-[10px] text-gray-400 tracking-wide">{prop.rent}/mo</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+    const CommunicationGraphic = () => {
+      const [step, setStep] = useState(0);
+
+      useEffect(() => {
+        let isMounted = true;
+        // Stagger the appearance of the messages
+        const s1 = setTimeout(() => isMounted && setStep(1), 600);
+        const s2 = setTimeout(() => isMounted && setStep(2), 2200);
+        const s3 = setTimeout(() => isMounted && setStep(3), 3200);
+        const s4 = setTimeout(() => isMounted && setStep(4), 4800);
+        
+        return () => {
+          isMounted = false;
+          clearTimeout(s1); clearTimeout(s2); clearTimeout(s3); clearTimeout(s4);
+        };
+      }, []);
+
+      return (
+        <div className="liquid-glass rounded-2xl p-5 h-full min-h-[320px] flex flex-col relative overflow-hidden">
+          {/* Header: Leasa AI Profile */}
+          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10 shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+              <div className="w-4 h-4 rounded-full bg-white/20 relative">
+                {/* Active Status Dot */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-[#1a1a1a]"></div>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-white font-semibold tracking-widest uppercase">Leasa AI</div>
+            </div>
+          </div>
+
+          {/* Animated Chat Stream */}
+          <div className="flex-1 flex flex-col justify-end overflow-hidden">
+            <div className="space-y-3 w-full flex flex-col justify-end">
+              {step >= 1 && (
+                <ChatBubble role="ai">
+                  Hi Bella! I noticed you just unlocked Unit 102. How does the layout look to you?
+                </ChatBubble>
+              )}
+              {step >= 2 && (
+                <ChatBubble role="user">
+                  It's nice, but do you have anything available with a second bathroom?
+                </ChatBubble>
+              )}
+              {step === 3 && <TypingIndicator />}
+              {step >= 4 && (
+                <ChatBubble role="ai">
+                  Yes, Unit 112 has 2 baths and opens Dec 15. Would you like me to add it to your tour schedule today?
+                </ChatBubble>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+    const ShowingsGraphic = () => {
+      // Local state to make the toggles actually interactive
+      const [toggles, setToggles] = useState([
+        { id: 1, unit: 'Unit 102', time: '2:30 PM', on: true },
+        { id: 2, unit: 'Unit 112', time: '4:00 PM', on: true },
+        { id: 3, unit: 'Unit 204', time: '5:15 PM', on: false },
+      ]);
+
+      const handleToggle = (id) => {
+        setToggles(toggles.map(t => t.id === id ? { ...t, on: !t.on } : t));
+      };
+
+      return (
+        <div className="liquid-glass rounded-2xl p-5 h-full min-h-[240px] flex flex-col">
+          <div className="text-[9px] uppercase tracking-widest text-gray-400 mb-4">Confirm Today&apos;s Tours</div>
+          <div className="space-y-2 flex-1">
+            {toggles.map((row) => (
+              <div key={row.id} className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5">
+                <div>
+                  <div className="text-xs text-white font-medium">{row.unit}</div>
+                  <div className="text-[10px] text-gray-400">{row.time}</div>
+                </div>
+                {/* Interactive Animated Toggle */}
+                <button
+                  type="button"
+                  onClick={() => handleToggle(row.id)}
+                  className={`w-9 h-5 rounded-full relative transition-colors duration-300 ${row.on ? 'bg-emerald-500' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${row.on ? 'right-0.5 translate-x-0' : 'left-0.5 translate-x-0 opacity-60'}`} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="mt-4 w-full py-2.5 rounded-lg bg-white text-black text-[10px] font-semibold uppercase tracking-wider hover:bg-gray-200 transition-colors">
+            Confirm Selected
+          </button>
+        </div>
+      );
+    };
+
+    const SecurityGraphic = () => {
+      const [step, setStep] = useState(0);
+
+      // Staggered animation sequence for the verification process
+      useEffect(() => {
+        let isMounted = true;
+        const s1 = setTimeout(() => isMounted && setStep(1), 800);  // Checkmark pops
+        const s2 = setTimeout(() => isMounted && setStep(2), 1600); // "Verification Complete"
+        const s3 = setTimeout(() => isMounted && setStep(3), 2200); // "Access Unlocked"
+
+        return () => {
+          isMounted = false;
+          clearTimeout(s1); clearTimeout(s2); clearTimeout(s3);
+        };
+      }, []);
+
+      return (
+        <div className="liquid-glass rounded-2xl p-5 h-full min-h-[240px] flex flex-col items-center justify-center">
+          <div className="relative mb-6 flex justify-center">
+            {/* Centered ID Screen */}
+            <div className="w-[80px] h-[100px] rounded-xl bg-white/8 flex flex-col items-center justify-center gap-1.5 shadow-lg border border-white/10 relative z-10">
+              <div className="w-10 h-8 rounded-md bg-white/15" />
+              <div className="w-12 h-1.5 rounded-full bg-white/20" />
+              <div className="w-8 h-1.5 rounded-full bg-white/10" />
+              <span className="text-[9px] text-gray-500 font-semibold uppercase tracking-widest mt-1">ID</span>
+            </div>
+
+            {/* Animated Green Checkmark Overlay */}
+            <div className={`absolute -bottom-3 -right-4 w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-xl z-20 border-2 border-[#121212] transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${step >= 1 ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-4'}`}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Animated Text Container */}
+          <div className="text-center h-10 flex flex-col items-center justify-center">
+            <div className={`text-sm text-white font-medium transition-all duration-500 ${step >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+              Verification Complete
+            </div>
+            <div className={`text-[10px] text-emerald-400 uppercase tracking-widest mt-1 font-semibold transition-all duration-500 ${step >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+              Access Unlocked
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const FEATURE_TABS = [
+      {
+        id: 'showings',
+        label: 'Showings',
+        title: 'On Demand Showings',
+        copy: 'Renters pick units and time slots. Your team confirms access in one view—no lobby staffing required.',
+        Graphic: ShowingsGraphic, // Now uses the interactive component
+      },
+
+      {
+        id: 'communication',
+        label: 'Communication',
+        title: 'Leasa AI On Every Tour',
+        copy: 'Prospects get real-time answers while they walk the unit. Your team sees the thread without joining on-site.',
+        Graphic: CommunicationGraphic,
+      },
+
+      {
+        id: 'security',
+        label: 'Security',
+        title: 'Seamless Secure Access',
+        copy: 'ID and selfie checks run before unlock. Every entry uses a rotation-locked code tied to the tour record.',
+        Graphic: SecurityGraphic, // Now uses the animated component
+      },
+
+      {
+        id: 'pricing',
+        label: 'Pricing',
+        title: 'Maximize Lead Value.',
+        copy: 'Our platform intelligently matches high-intent leads across your broader property network. By suggesting contextually relevant floorplan upgrades and structural unit alternatives, we ensure prospects settle inside your portfolio while accelerating leasing velocity.',
+        Graphic: CrossSellGraphic,
+      },
+      {
+        id: 'deployment',
+        label: 'Deployment',
+        title: 'White Label Ready',
+        copy: 'Ship under your domain with your logo, palette, and hosting rules—embedded in your site or standalone.',
+        Graphic: DeploymentGraphic,
+      },
+    ];
+
+    const FeatureNavigationPanel = () => {
+      const [activeTab, setActiveTab] = useState('showings');
+      const [panelVisible, setPanelVisible] = useState(true);
+      const fadeRef = useRef(null);
+
+      const switchTab = (id) => {
+        if (id === activeTab) return;
+        if (fadeRef.current) clearTimeout(fadeRef.current);
+        setPanelVisible(false);
+        fadeRef.current = setTimeout(() => {
+          setActiveTab(id);
+          setPanelVisible(true);
+        }, 300);
+      };
+
+      useEffect(() => () => { if (fadeRef.current) clearTimeout(fadeRef.current); }, []);
+
+      const current = FEATURE_TABS.find((t) => t.id === activeTab) || FEATURE_TABS[0];
+      const Graphic = current.Graphic;
+
+      return (
+        <div className="mt-24 lg:mt-28">
+          <span className="text-[10px] tracking-[0.4em] uppercase text-gray-300 mb-6 block font-semibold">Platform Capabilities</span>
+
+          <div className="liquid-glass p-1.5 rounded-full flex flex-wrap justify-center gap-1 mb-10 shadow-2xl">
+            {FEATURE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => switchTab(tab.id)}
+                className={`px-4 sm:px-6 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                  activeTab === tab.id ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className={`feature-panel-fade grid grid-cols-1 lg:grid-cols-[38.2fr_61.8fr] gap-8 lg:gap-10 items-stretch min-h-[260px] ${
+              panelVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <div className="flex flex-col justify-center lg:pr-6">
+              <h4 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-4 leading-tight">
+                {current.title}
+              </h4>
+              <p className="text-sm text-gray-200/90 font-light leading-relaxed max-w-md">
+                {current.copy}
+              </p>
+              <a href="#inquiry" className="mt-6 text-[11px] uppercase tracking-[0.2em] font-medium text-gray-300 hover:text-white transition-colors w-fit">
+                Learn More →
+              </a>
+            </div>
+            <div>
+              <Graphic />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const AnimatedHeading = ({ text, initialDelay = 200, charDelay = 30 }) => {
+      const [isStarted, setIsStarted] = useState(false);
+      useEffect(() => {
+        const timer = setTimeout(() => setIsStarted(true), initialDelay);
+        return () => clearTimeout(timer);
+      }, [initialDelay]);
+
+      const lines = text.split('\n');
+      let totalCharCount = 0;
+
+      return (
+        <h1 className="text-4xl md:text-5xl lg:text-7xl font-normal mb-4 leading-[1.05]" 
+            style={{ letterSpacing: '-0.04em' }}>
+          {lines.map((line, lineIdx) => {
+            const chars = line.split('').map((char, charIdx) => {
+              const delay = totalCharCount * charDelay;
+              totalCharCount++;
+              return (
+                <span key={charIdx} className={`char ${isStarted ? 'visible' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
+                  {char === ' ' ? '\u00A0' : char}
+                </span>
+              );
+            });
+            return <div key={lineIdx}>{chars}</div>;
+          })}
+        </h1>
+      );
+    };
+
+    const INTEGRATIONS = [
+      { name: "Yardi", type: "Property Management" },
+      { name: "Entrata", type: "Property Management" },
+      { name: "RealPage", type: "Property Management" },
+      { name: "RentCafe", type: "CRM & Leasing" },
+      { name: "Funnel", type: "Leasing CRM" },
+      { name: "Salesforce", type: "Enterprise CRM" },
+      { name: "igloohome", type: "Access Control" },
+      { name: "Custom API", type: "On Request", dashed: true },
+    ];
+
+    const IntegrationConveyor = () => {
+      const belt = [...INTEGRATIONS, ...INTEGRATIONS];
+      return (
+        <div className="integration-conveyor mt-14 lg:mt-16">
+          <div className="integration-conveyor-track py-2">
+            {belt.map((integration, idx) => (
+              <div
+                key={idx}
+                className={`integration-card liquid-glass p-5 rounded-2xl flex flex-col justify-between min-h-[88px] ${
+                  integration.dashed ? 'border border-dashed border-white/20' : 'border border-white/5 hover:border-white/20'
+                } transition-all duration-300`}
+              >
+                <span className="text-white font-medium tracking-wide text-sm">{integration.name}</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider mt-2 block">{integration.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // --- Main Layout ---
+
+    const App = () => {
+      const [persona, setPersona] = useState('operators'); // 'operators' | 'renters'
+      const headerRef = useRef(null);
+
+      const scrollToSection = (id) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        const headerOffset = (headerRef.current?.offsetHeight ?? 72) + 16;
+        const top = element.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      };
+
+      useEffect(() => {
+        const onAnchorClick = (e) => {
+          const anchor = e.target.closest('a[href^="#"]');
+          if (!anchor) return;
+          const hash = anchor.getAttribute('href');
+          if (!hash || hash.length < 2) return;
+          const id = decodeURIComponent(hash.slice(1));
+          if (!document.getElementById(id)) return;
+          e.preventDefault();
+          scrollToSection(id);
+          window.history.pushState(null, '', `#${id}`);
+        };
+
+        document.addEventListener('click', onAnchorClick);
+
+        if (window.location.hash.length > 1) {
+          const id = decodeURIComponent(window.location.hash.slice(1));
+          requestAnimationFrame(() => scrollToSection(id));
+        }
+
+        return () => document.removeEventListener('click', onAnchorClick);
+      }, []);
+
+      const features = {
+        operators: [
+          { title: "Automated Leasing", desc: "Self-guided tours that actually close. Convert leads to leases seamlessly around the clock without involving on-site staff." },
+          { title: "Empirical Prospect Feedback", desc: "Gain deep, actionable insights on renter preferences, track drop-offs, and map out the exact drivers of conversion." },
+          { title: "Immediate Cost Savings", desc: "Pay only for performance with transaction commissions 75% lower than market average, or scale via our streamlined licensing model." }
+        ],
+        renters: [
+          { title: "On-Demand Showings", desc: "Explore available apartments anytime on your own terms. Quickly book and tour instantly, broker-free." },
+          { title: "Interactive Leasa AI Support", desc: "An intelligent virtual assistant providing real-time, tailored responses regarding unit features and availability during tours." },
+          { title: "One-Stop App Experience", desc: "Search through deeply vetted property options, view transparent pricing, complete tours, and apply directly within a single app." }
+        ]
+      };
+
+      return (
+        <div className="relative min-h-screen">
+          
+          {/* Global Background Video - Remains visible through translucent sections while scrolling */}
+          <video 
+            className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none"
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
+            autoPlay loop muted playsInline
+          />
+
+          {/* Fixed navbar — stays visible while scrolling */}
+          <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-16 pt-6">
+            <nav className="liquid-glass rounded-xl px-4 py-2 flex items-center justify-between">
+              <a href="#overview" className="text-xl font-semibold tracking-tighter uppercase hover:text-white transition-colors">Aigentless</a>
+              <div className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-gray-200">
+                <a href="#overview" className="hover:text-white transition-colors">Overview</a>
+                <a href="#features" className="hover:text-white transition-colors">Features</a>
+                <a href="#integrations" className="hover:text-white transition-colors">Integrations</a>
+              </div>
+              <a href="#inquiry" className="nav-cta px-6 py-2.5 rounded-lg">
+                Get Started
+              </a>
+            </nav>
+          </header>
+
+          {/* Section: Hero */}
+          <section id="overview" className="relative z-10 min-h-screen w-full flex flex-col bg-black/20 pt-28">
+            {/* Hero Content */}
+            <div className="px-6 md:px-12 lg:px-16 flex-1 flex flex-col justify-center relative z-20 -mt-20">
+              <div className="max-w-5xl w-full min-w-0 overflow-x-hidden">
+                <FadeIn delay={200} duration={1000}>
+                  <h1
+                    className={`${HERO_TYPE} mb-3 flex flex-col w-full max-w-full min-w-0 gap-y-1 lg:gap-y-2`}
+                    style={HERO_TRACKING}
+                  >
+                    <span className="block shrink-0">Self-Guided Tours That</span>
+                    <span className="block w-full min-w-0 max-w-full overflow-hidden">
+                      <RotatingPhrases />
+                    </span>
+                  </h1>
+                  <p className={`${HERO_SUBTITLE} mb-6`}>
+                    For Renters and Operators
+                  </p>
+                </FadeIn>
+                <FadeIn delay={700} duration={1000} className="flex flex-wrap md:flex-nowrap gap-4 mb-4">
+                  <a href="#inquiry" className="nav-cta inline-block px-8 py-3.5 rounded-lg">
+                    Request a Demo
+                  </a>
+                </FadeIn>
+              </div>
+            </div>
+
+            {/* Gradual blur/darken into next section */}
+            <div className="hero-to-content-blur" aria-hidden="true" />
+          </section>
+
+          {/* Section: Features & Persona Switcher */}
+          <section id="features" className="scroll-section py-32 px-6 md:px-12 lg:px-16">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex flex-col items-center mb-20">
+                {/* Interactive Toggle Button Layout */}
+                <div className="liquid-glass p-1.5 rounded-full flex gap-1 mb-10 border border-white/10 shadow-2xl">
+                  <button 
+                    onClick={() => setPersona('operators')}
+                    className={`px-8 py-3 rounded-full text-sm font-semibold uppercase tracking-tighter transition-all duration-300 ${persona === 'operators' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    For Operators
+                  </button>
+                  <button 
+                    onClick={() => setPersona('renters')}
+                    className={`px-8 py-3 rounded-full text-sm font-semibold uppercase tracking-tighter transition-all duration-300 ${persona === 'renters' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    For Renters
+                  </button>
+                </div>
+                
+                <div className="text-center max-w-2xl">
+                  <h2 className="text-3xl md:text-5xl font-normal mb-6 tracking-tight">
+                    {persona === 'operators' ? 'Intelligent Infrastructure.' : 'Elevated Sanctuary.'}
+                  </h2>
+                  <p className="text-white text-base font-light leading-relaxed">
+                    {persona === 'operators' 
+                      ? 'Deploy an autonomous self-service operating framework across your multifamily real estate portfolio. Maximize lead conversion velocity, eliminate staffing constraints, and compress lease-up timelines.'
+                      : 'Find your next home entirely on your own schedule. Experience smooth, personalized, self-guided property exploration backed by real-time conversational AI updates.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Grid Using Balanced Rule of Thirds Distribution Layout */}
+              <div className="grid md:grid-cols-3 gap-8">
+                {features[persona].map((f, i) => (
+                  <div key={i} className="liquid-glass p-8 rounded-3xl border border-white/5 group hover:border-white/20 transition-all duration-500 flex flex-col justify-between min-h-[260px]">
+                    <div>
+                      <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center mb-6 text-sm font-semibold group-hover:bg-white group-hover:text-black transition-all duration-300">
+                        {i + 1}
+                      </div>
+                      <h4 className="text-xl font-medium mb-3 tracking-tight text-white group-hover:text-white/90">{f.title}</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed font-light">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Control Center / Interactive Platform Mock */}
+          <section className="scroll-section py-32 px-6 md:px-12 lg:px-16">
+             <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+                
+                {/* Rule of Thirds Proportion: Column Span 5 for Content */}
+                <div className="lg:col-span-5 space-y-8">
+                  <div>
+                    <span className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-3 block font-semibold">The Interface</span>
+                    <h3 className="text-4xl font-normal tracking-tight leading-tight text-white">
+                      The Aigentless <br/>Control Center.
+                    </h3>
+                  </div>
+                  
+                  <div className="space-y-8">
+                    <div className="relative pl-6 border-l-2 border-white/10 hover:border-white transition-colors duration-500">
+                      <h5 className="text-lg font-medium mb-2 text-white">Automated Leasing</h5>
+                      <p className="text-sm text-gray-200 font-light leading-relaxed">
+                        Self-guided tours that actually close. Our conversational platform instantly moves prospective renters through verification, personalized tours, and direct digital applications.
+                      </p>
+                    </div>
+                    <div className="relative pl-6 border-l-2 border-white/10 hover:border-white transition-colors duration-500">
+                      <h5 className="text-lg font-medium mb-2 text-white">Secure Identity Architecture</h5>
+                      <p className="text-sm text-gray-200 font-light leading-relaxed">
+                        A robust, three-layer automated protection structure handles real-time ID and selfie verification alongside rotation-locked access codes for complete on-site tracking.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rule of Thirds Proportion: Column Span 7 for Visual Interface Display */}
+                <div className="lg:col-span-7 relative group">
+                  <ControlCenterChatSimulator />
+                  <div className="absolute -inset-4 bg-white/5 blur-[120px] rounded-full -z-10" />
+                </div>
+             </div>
+
+             <FeatureNavigationPanel />
+
+             
+          </section>
+
+          {/* Section: Ecosystem Integrations */}
+          <section id="integrations" className="scroll-section py-32 overflow-hidden">
+            <div className="max-w-6xl mx-auto px-6 md:px-12 lg:px-16 text-center lg:text-left">
+              <span className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-3 block font-semibold">Unified Tech Stack</span>
+              <h3 className="text-3xl md:text-4xl font-normal tracking-tight text-white mb-4">
+                Deep Native Integration.
+              </h3>
+              <p className="text-sm text-gray-400 font-light leading-relaxed max-w-xl mx-auto lg:mx-0">
+                Aigentless synchronizes with property management architecture, customer relationship platforms, and hardware access frameworks out of the box.
+              </p>
+            </div>
+            <IntegrationConveyor />
+          </section>
+
+          {/* Section: Inquiry / Request a Demo Form */}
+          <section id="inquiry" className="scroll-section py-32 px-6 md:px-12 lg:px-16">
+            <div className="max-w-3xl mx-auto text-center">
+              <span className="text-[10px] tracking-[0.4em] uppercase text-gray-300 mb-4 block font-semibold">Get Started</span>
+              <h2 className="text-3xl md:text-5xl font-normal mb-4 tracking-tight text-white">Schedule a Custom Demo</h2>
+              <p className="text-gray-200/90 font-light max-w-lg mx-auto mb-12 text-sm md:text-base leading-relaxed">
+                Connect with our team to customize the platform to your operations, decrease workflows, and start conversion tracking immediately.
+              </p>
+              
+              <form onSubmit={(e) => e.preventDefault()} className="grid md:grid-cols-2 gap-4 text-left">
+                <input 
+                  type="text" 
+                  placeholder="Full Name" 
+                  className="w-full bg-white/[0.08] border border-white/15 rounded-xl px-4 py-3.5 text-sm text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-white/35 focus:bg-white/[0.1] transition-colors"
+                />
+                <input 
+                  type="email" 
+                  placeholder="Work Email" 
+                  className="w-full bg-white/[0.08] border border-white/15 rounded-xl px-4 py-3.5 text-sm text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-white/35 focus:bg-white/[0.1] transition-colors"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Company Name" 
+                  className="w-full bg-white/[0.08] border border-white/15 rounded-xl px-4 py-3.5 text-sm text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-white/35 focus:bg-white/[0.1] transition-colors"
+                />
+                <button className="w-full bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl py-3.5 hover:bg-gray-100 transition-all shadow-xl">
+                  Submit Inquiry
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* Section: Footer */}
+          <footer className="scroll-section py-20 px-6 md:px-12 lg:px-16">
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+              <div>
+                <div className="text-2xl font-bold tracking-tighter uppercase mb-2">Aigentless</div>
+                <p className="text-xs text-gray-400 tracking-widest uppercase font-medium">Automated Leasing Frameworks</p>
+              </div>
+              <div className="flex flex-wrap gap-12">
+                <div>
+                  <h6 className="text-[10px] text-gray-400 uppercase tracking-widest mb-4 font-bold">Platform Blueprint</h6>
+                  <ul className="space-y-3 text-xs font-light text-gray-400">
+                    <li><a href="#features" className="hover:text-white transition-colors">For Operators</a></li>
+                    <li><a href="#features" className="hover:text-white transition-colors">For Renters</a></li>
+                    <li><a href="#integrations" className="hover:text-white transition-colors">Ecosystem Integrations</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <h6 className="text-[10px] text-gray-400 uppercase tracking-widest mb-4 font-bold">Company Architecture</h6>
+                  <ul className="space-y-3 text-xs font-light text-gray-400">
+                    <li><a href="#overview" className="hover:text-white transition-colors">Platform Vision</a></li>
+                    <li><a href="#inquiry" className="hover:text-white transition-colors">Request Demo</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-gray-500 tracking-widest uppercase font-medium">
+              <div className="flex items-center gap-2">
+                <span>© 2026 Aigentless Technologies Inc.</span>
+                <span className="text-[9px] text-gray-600">|</span>
+                <span className="text-gray-400 font-semibold tracking-wide">Equal Housing Opportunity</span>
+              </div>
+              <div className="flex gap-6 md:gap-8 items-center">
+                <a 
+                  href="https://www.linkedin.com/company/aigentless" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-white cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                  LinkedIn
+                </a>
+                <span className="hover:text-white cursor-pointer transition-colors">Privacy Infrastructure</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
