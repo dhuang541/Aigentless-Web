@@ -179,24 +179,52 @@
       .integration-card { width: 12.5rem; }
     }
 
-/* Hero rotating phrase — locked to one line and scaled to fit */
+/* Hero rotating phrase — Mobile wrapping, Desktop single-line */
 .rotating-phrase-window {
       display: block;
       width: 100%;
       overflow: hidden;
-      padding-bottom: 0.15em;
       position: relative;
+      height: 3.0em; /* Slightly taller to safely hold two lines */
     }
 
     .phrase-layer {
       display: block;
       width: 100%;
       line-height: 1.2;
-      white-space: nowrap;
-      font-size: min(2.5vw, 4.5rem); /* Shrunk down so long phrases fit the screen */
+      white-space: normal; /* This allows the text to wrap on mobile! */
+      font-size: clamp(1.65rem, 6.5vw, 3.8rem); 
       color: #fff;
       transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform, opacity;
+    }
+
+    /* Hide scrollbar for mobile feature tabs */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @media (min-width: 768px) {
+      .rotating-phrase-window {
+        height: 1.25em; /* Holds one line on desktop */
+      }
+      .phrase-layer {
+        white-space: nowrap; /* Forces one line on desktop */
+        font-size: min(3.8vw, 3.75rem); /* Caps the desktop text so it perfectly matches the static line */
+      }
+    }
+
+    /* Helper to hide scrollbars on the mobile tabs */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
 
     .phrase-layer.is-exiting {
@@ -429,9 +457,9 @@
       );
     };
 
-    const HERO_TYPE = "font-semibold uppercase tracking-tighter text-[5vw] md:text-5xl lg:text-6xl leading-[1.2] text-white";
+    const HERO_TYPE = "font-semibold uppercase tracking-tighter text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.2] text-white";
     const HERO_TRACKING = {}; 
-    const HERO_SUBTITLE = "text-sm md:text-base font-semibold uppercase tracking-tighter text-gray-300 mt-2";
+    const HERO_SUBTITLE = "text-sm sm:text-base md:text-lg lg:text-xl font-semibold uppercase tracking-tighter text-gray-300 mt-3 md:mt-2";
     const HERO_TAGLINE = "text-lg md:text-xl font-normal text-gray-200 leading-snug";
 
     const ROTATING_PHRASES = [
@@ -790,6 +818,40 @@
       const [panelVisible, setPanelVisible] = useState(true);
       const fadeRef = useRef(null);
 
+      // Swipe detection state
+      const [touchStart, setTouchStart] = useState(null);
+      const [touchEnd, setTouchEnd] = useState(null);
+
+      const minSwipeDistance = 50;
+
+      const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+      };
+
+      const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+      const onTouchEndHandler = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+        
+        if (isLeftSwipe || isRightSwipe) {
+          const currentIndex = FEATURE_TABS.findIndex(t => t.id === activeTab);
+          let nextIndex;
+          
+          if (isLeftSwipe) {
+            // Swipe left goes to next tab
+            nextIndex = (currentIndex + 1) % FEATURE_TABS.length;
+          } else {
+            // Swipe right goes to previous tab
+            nextIndex = (currentIndex - 1 + FEATURE_TABS.length) % FEATURE_TABS.length;
+          }
+          switchTab(FEATURE_TABS[nextIndex].id);
+        }
+      };
+
       const switchTab = (id) => {
         if (id === activeTab) return;
         if (fadeRef.current) clearTimeout(fadeRef.current);
@@ -809,13 +871,14 @@
         <div className="mt-24 lg:mt-28">
           <span className="text-[10px] tracking-[0.4em] uppercase text-gray-300 mb-6 block font-semibold">Platform Capabilities</span>
 
-          <div className="liquid-glass p-1.5 rounded-full flex flex-wrap justify-center gap-1 mb-10 shadow-2xl">
+          {/* Desktop Navigation (Pills) */}
+          <div className="hidden md:flex bg-white/5 backdrop-blur-md border border-white/10 p-1.5 rounded-full flex-wrap justify-center gap-1 mb-10 shadow-xl">
             {FEATURE_TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => switchTab(tab.id)}
-                className={`px-4 sm:px-6 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
                   activeTab === tab.id ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -824,12 +887,38 @@
             ))}
           </div>
 
+          {/* Mobile Navigation (Dots) */}
+          <div className="flex md:hidden flex-col items-center gap-4 mb-10">
+            {/* Shows the name of the currently selected tab */}
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white px-5 py-2 bg-white/10 rounded-full border border-white/10">
+              {FEATURE_TABS.find(t => t.id === activeTab)?.label}
+            </div>
+            
+            {/* The clickable dots */}
+            <div className="flex gap-3">
+              {FEATURE_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => switchTab(tab.id)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    activeTab === tab.id ? 'bg-white scale-125' : 'bg-white/20 hover:bg-white/40'
+                  }`}
+                  aria-label={`Switch to ${tab.label}`}
+                />
+              ))}
+            </div>
+          </div>
+
           <div
-            className={`feature-panel-fade grid grid-cols-1 lg:grid-cols-[38.2fr_61.8fr] gap-8 lg:gap-10 items-stretch min-h-[260px] ${
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEndHandler}
+            className={`feature-panel-fade grid grid-cols-1 lg:grid-cols-[38.2fr_61.8fr] gap-8 lg:gap-10 items-stretch min-h-[260px] cursor-grab active:cursor-grabbing ${
               panelVisible ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <div className="flex flex-col justify-center lg:pr-6">
+            <div className="flex flex-col justify-center lg:pr-6 pointer-events-none md:pointer-events-auto">
               <h4 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-4 leading-tight">
                 {current.title}
               </h4>
@@ -912,15 +1001,16 @@
     // --- Main Layout ---
 
     const App = () => {
-      const [persona, setPersona] = useState('operators'); // 'operators' | 'renters'
-      const headerRef = useRef(null);
-
-      const scrollToSection = (id) => {
+      const [persona, setPersona] = useState('operators');
+      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+      
+      const scrollToSection = (e, id) => {
+        e.preventDefault();
+        setIsMobileMenuOpen(false);
         const element = document.getElementById(id);
-        if (!element) return;
-        const headerOffset = (headerRef.current?.offsetHeight ?? 72) + 16;
-        const top = element.getBoundingClientRect().top + window.scrollY - headerOffset;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       };
 
       useEffect(() => {
@@ -969,25 +1059,53 @@
             autoPlay loop muted playsInline
           />
 
-          {/* Fixed navbar — stays visible while scrolling */}
-          <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-16 pt-6">
-            <nav className="liquid-glass rounded-xl px-4 py-2 flex items-center justify-between">
-              <a href="#overview" className="text-xl font-semibold tracking-tighter uppercase hover:text-white transition-colors">Aigentless</a>
-              <div className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-gray-200">
-                <a href="#overview" className="hover:text-white transition-colors">Overview</a>
-                <a href="#features" className="hover:text-white transition-colors">Features</a>
-                <a href="#integrations" className="hover:text-white transition-colors">Integrations</a>
+          {/* Navbar */}
+          <header className="absolute top-0 w-full z-50 px-6 md:px-12 lg:px-16 pt-6">
+              <nav className="w-full flex items-center justify-between py-2">
+                <div className="text-xl font-semibold tracking-tighter uppercase text-white z-20">Aigentless</div>
+                
+                {/* Desktop Links */}
+                <div className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-gray-200">
+                  <a href="#overview" onClick={(e) => scrollToSection(e, 'overview')} className="hover:text-white transition-colors cursor-pointer">Overview</a>
+                  <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="hover:text-white transition-colors cursor-pointer">Features</a>
+                  <a href="#integrations" onClick={(e) => scrollToSection(e, 'integrations')} className="hover:text-white transition-colors cursor-pointer">Integrations</a>
+                </div>
+                <a href="#inquiry" onClick={(e) => scrollToSection(e, 'inquiry')} className="hidden md:inline-block nav-cta px-6 py-2.5 rounded-lg cursor-pointer">
+                  Get Started
+                </a>
+
+                {/* Mobile Menu Toggle */}
+                <button 
+                  className="md:hidden text-white p-2 focus:outline-none z-20"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {isMobileMenuOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                </button>
+              </nav>
+
+              {/* Mobile Dropdown Menu */}
+              <div className={`md:hidden absolute top-[80px] left-6 right-6 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 transform origin-top ${isMobileMenuOpen ? 'opacity-100 scale-y-100 pointer-events-auto' : 'opacity-0 scale-y-95 pointer-events-none'}`}>
+                <div className="flex flex-col p-5 gap-5 text-[11px] uppercase tracking-[0.2em] font-medium text-gray-200 text-center">
+                  <a href="#overview" onClick={(e) => { scrollToSection(e, 'overview'); setIsMobileMenuOpen(false); }} className="block py-2 hover:text-white transition-colors">Overview</a>
+                  <a href="#features" onClick={(e) => { scrollToSection(e, 'features'); setIsMobileMenuOpen(false); }} className="block py-2 hover:text-white transition-colors">Features</a>
+                  <a href="#integrations" onClick={(e) => { scrollToSection(e, 'integrations'); setIsMobileMenuOpen(false); }} className="block py-2 hover:text-white transition-colors">Integrations</a>
+                  <a href="#inquiry" onClick={(e) => { scrollToSection(e, 'inquiry'); setIsMobileMenuOpen(false); }} className="nav-cta mx-auto mt-2 px-8 py-3 rounded-lg inline-block text-center w-[80%]">
+                    Get Started
+                  </a>
+                </div>
               </div>
-              <a href="#inquiry" className="nav-cta px-6 py-2.5 rounded-lg">
-                Get Started
-              </a>
-            </nav>
-          </header>
+            </header>
 
           {/* Section: Hero */}
           <section id="overview" className="relative z-10 min-h-screen w-full flex flex-col bg-black/20 pt-28">
             {/* Hero Content */}
-            <div className="px-6 md:px-12 lg:px-16 flex-1 flex flex-col justify-center relative z-20 -mt-20">
+            <div className="px-6 md:px-12 lg:px-16 flex-1 flex flex-col justify-center relative z-20 -mt-80">
               <div className="max-w-5xl w-full min-w-0 overflow-x-hidden">
                 <FadeIn delay={200} duration={1000}>
                   <h1
