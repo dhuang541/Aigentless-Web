@@ -999,10 +999,11 @@
   }, []);
 
   const scrollToSection = (e, id) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setIsMobileMenuOpen(false);
         const element = document.getElementById(id);
         if (element) {
+          // 'start' alignment ensures the section header is visible
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       };
@@ -1126,10 +1127,13 @@
                     For Renters and Operators
                   </p>
                 </FadeIn>
-                <FadeIn delay={700} duration={1000} className="flex flex-wrap md:flex-nowrap gap-4 mb-4">
-                  <a href="#inquiry" className="nav-cta inline-block px-8 py-3.5 rounded-lg">
+                <FadeIn delay={700} duration={1000} className="flex flex-wrap md:flex-nowrap gap-4 mb-4 -mt-4 md:mt-0">
+                  <button 
+                    onClick={(e) => scrollToSection(e, 'inquiry')} 
+                    className="nav-cta inline-block px-8 py-3.5 rounded-lg cursor-pointer"
+                  >
                     Request a Demo
-                  </a>
+                  </button>
                 </FadeIn>
               </div>
             </div>
