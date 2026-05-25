@@ -116,34 +116,12 @@
     }
 
     /* Unified translucent sections — continuous scroll */
-    .scroll-section {
-      position: relative;
-      z-index: 10;
-      background: rgba(0, 0, 0, 0.18);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    /* Subtle hero → content feather */
-    .hero-to-content-blur {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: min(18vh, 140px);
-      background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0%,
-        rgba(0, 0, 0, 0.06) 50%,
-        rgba(0, 0, 0, 0.14) 100%
-      );
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 75%);
-      mask-image: linear-gradient(to bottom, transparent 0%, black 75%);
-      pointer-events: none;
-      z-index: 15;
-    }
+    /* Unified translucent sections — continuous scroll */
+.scroll-section {
+  position: relative;
+  z-index: 10;
+}
+/* Deleted .hero-to-content-blur entirely */
 
     /* Integration conveyor belt */
     @keyframes conveyor-scroll {
@@ -185,15 +163,15 @@
       width: 100%;
       overflow: hidden;
       position: relative;
-      height: 3.0em; /* Slightly taller to safely hold two lines */
+      height: 2.5em; /* Slightly taller to safely hold two lines */
     }
 
     .phrase-layer {
       display: block;
       width: 100%;
       line-height: 1.2;
-      white-space: normal; /* This allows the text to wrap on mobile! */
-      font-size: clamp(1.65rem, 6.5vw, 3.8rem); 
+      white-space: normal;
+      font-size: clamp(1.0rem, 4.0vw, 3.8rem); /* Reduced 6.5vw to 5.5vw to prevent cutoff */
       color: #fff;
       transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform, opacity;
@@ -872,7 +850,8 @@
           <span className="text-[10px] tracking-[0.4em] uppercase text-gray-300 mb-6 block font-semibold">Platform Capabilities</span>
 
           {/* Desktop Navigation (Pills) */}
-          <div className="hidden md:flex bg-white/5 backdrop-blur-md border border-white/10 p-1.5 rounded-full flex-wrap justify-center gap-1 mb-10 shadow-xl">
+          {/* Desktop Navigation (Pills) — Fitted Width */}
+          <div className="hidden md:flex w-fit mx-auto bg-white/5 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl flex-wrap justify-center gap-1 mb-10 shadow-xl">
             {FEATURE_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -1001,10 +980,25 @@
     // --- Main Layout ---
 
     const App = () => {
-      const [persona, setPersona] = useState('operators');
-      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-      
-      const scrollToSection = (e, id) => {
+  const [persona, setPersona] = useState('operators');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrollBlur, setScrollBlur] = useState(0); // NEW STATE
+  
+  // NEW: Scroll-driven cinematic sequence
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const vh = window.innerHeight;
+      // Start blurring at 10% scroll, fully blurred by 60% of viewport height
+      const progress = Math.min(Math.max((scrollY - vh * 0.6) / (vh * 0.5), 0), 1);
+      setScrollBlur(progress);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Init on load
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (e, id) => {
         e.preventDefault();
         setIsMobileMenuOpen(false);
         const element = document.getElementById(id);
@@ -1053,13 +1047,24 @@
         <div className="relative min-h-screen">
           
           {/* Global Background Video - Remains visible through translucent sections while scrolling */}
-          <video 
-            className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none"
-            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
-            autoPlay loop muted playsInline
-          />
+          {/* Global Background Video */}
+<video 
+  className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none"
+  src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
+  autoPlay loop muted playsInline
+/>
 
-          {/* Navbar */}
+{/* NEW: Scroll-Driven Cinematic Blur Canvas */}
+<div 
+  className="fixed inset-0 z-[1] pointer-events-none will-change-[backdrop-filter,background-color]"
+  style={{
+    background: `rgba(0, 0, 0, ${0.20 * scrollBlur})`,
+    backdropFilter: `blur(${10 * scrollBlur}px)`,
+    WebkitBackdropFilter: `blur(${16 * scrollBlur}px)`,
+  }}
+/>
+
+{/* Navbar */}
           <header className="absolute top-0 w-full z-50 px-6 md:px-12 lg:px-16 pt-6">
               <nav className="w-full flex items-center justify-between py-2">
                 <div className="text-xl font-semibold tracking-tighter uppercase text-white z-20">Aigentless</div>
@@ -1103,10 +1108,10 @@
             </header>
 
           {/* Section: Hero */}
-          <section id="overview" className="relative z-10 min-h-screen w-full flex flex-col bg-black/20 pt-28">
+          <section id="overview" className="relative z-10 min-h-[85vh] w-full flex flex-col pt-28">
             {/* Hero Content */}
-            <div className="px-6 md:px-12 lg:px-16 flex-1 flex flex-col justify-center relative z-20 -mt-80">
-              <div className="max-w-5xl w-full min-w-0 overflow-x-hidden">
+            <div className="px-6 md:px-12 lg:px-16 flex-1 flex flex-col justify-center relative z-20 -mt-56">
+              <div class="w-full max-w-[90rem] px-6 lg:px-16">
                 <FadeIn delay={200} duration={1000}>
                   <h1
                     className={`${HERO_TYPE} mb-3 flex flex-col w-full max-w-full min-w-0 gap-y-1 lg:gap-y-2`}
@@ -1271,7 +1276,7 @@
 
           {/* Section: Footer */}
           <footer className="scroll-section py-20 px-6 md:px-12 lg:px-16">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+            <div className="max-w-6xl mx-auto mt-16 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-gray-500 tracking-widest uppercase font-medium">
               <div>
                 <div className="text-2xl font-bold tracking-tighter uppercase mb-2">Aigentless</div>
                 <p className="text-xs text-gray-400 tracking-widest uppercase font-medium">Automated Leasing Frameworks</p>
